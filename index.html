@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner de Cuidados com Pet - Carlamitertech</title>
+    <meta name="theme-color" content="#1b4d4f">
+    <meta name="description" content="Planner digital PWA para gestão de cuidados, saúde, hábitos e finanças de pets por Carlamitertech.">
+    <link rel="manifest" id="pwa-manifest">
+    <style>
+        :root {
+            --primary: #1b4d4f;
+            --primary-dark: #123537;
+            --accent: #2e7d7f;
+            --bg-light: #f4f8f8;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --border: #dcdcdc;
+            --success: #27ae60;
+            --danger: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #e9eff0;
+            color: var(--text);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .pet-bar {
+            background: var(--primary-dark);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pet-selector-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pet-bar select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            background: white;
+            font-weight: bold;
+            color: var(--primary-dark);
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #236365; }
+        .btn-secondary { background: #e0e0e0; color: #333; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        .content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .section-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .section-title {
+            background: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 15px;
+        }
+
+        @media (max-width: 650px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        input[type="text"], input[type="date"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(46, 125, 127, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+        }
+
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .checkbox-item input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        footer {
+            background: #f0f4f4;
+            border-top: 1px solid var(--border);
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show { opacity: 1; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 15px;
+        }
+
+        .modal {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 { margin-bottom: 10px; color: var(--primary); }
+        .modal p { font-size: 0.9rem; line-height: 1.4; margin-bottom: 10px; }
+        .modal-actions { text-align: right; margin-top: 15px; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .pet-bar, .actions-bar, footer, .btn { display: none !important; }
+            .app-container { box-shadow: none; border: none; }
+            .section-card { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Planner de Cuidados com Pet</h1>
+            <p>Ficha de Identificação, Saúde & Rotina Diária</p>
+        </header>
+
+        <div class="pet-bar">
+            <div class="pet-selector-group">
+                <label style="color:white; font-size: 0.85rem;" for="petSelect">Selecionar Pet:</label>
+                <select id="petSelect" onchange="switchPet(this.value)"></select>
+                <button class="btn btn-primary" onclick="promptNewPet()">+ Novo Pet</button>
+            </div>
+            <div class="actions-bar">
+                <button class="btn btn-secondary" onclick="exportData()">💾 Backup</button>
+                <button class="btn btn-secondary" onclick="importData()">📂 Restaurar</button>
+                <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+                <button class="btn btn-danger" onclick="deleteCurrentPet()">🗑️ Apagar Pet</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 1. DADOS DO PET & TUTOR -->
+            <div class="section-card">
+                <div class="section-title">1. Dados do Pet & Tutor</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Nome do Pet:</label>
+                        <input type="text" id="nomePet" oninput="saveField('nomePet', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Nome do Tutor:</label>
+                        <input type="text" id="nomeTutor" oninput="saveField('nomeTutor', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Espécie / Raça:</label>
+                        <input type="text" id="especieRaca" oninput="saveField('especieRaca', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone / WhatsApp:</label>
+                        <input type="text" id="telefone" oninput="saveField('telefone', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Nascimento / Idade:</label>
+                        <input type="text" id="nascimento" oninput="saveField('nascimento', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>E-mail:</label>
+                        <input type="text" id="email" oninput="saveField('email', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Pelagem / Cor:</label>
+                        <input type="text" id="pelagem" oninput="saveField('pelagem', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Clínica Veterinária / Contato:</label>
+                        <input type="text" id="clinica" oninput="saveField('clinica', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Nº do Microchip:</label>
+                        <input type="text" id="microchip" oninput="saveField('microchip', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Veterinário(a) Responsável:</label>
+                        <input type="text" id="vetResponsavel" oninput="saveField('vetResponsavel', this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. INFORMAÇÕES MÉDICAS IMPORTANTES -->
+            <div class="section-card">
+                <div class="section-title">2. Informações Médicas Importantes</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Alergias Conhecidas:</label>
+                        <textarea id="alergias" oninput="saveField('alergias', this.value)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Medicamentos de Uso Contínuo:</label>
+                        <textarea id="medicamentos" oninput="saveField('medicamentos', this.value)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Condições de Saúde / Doenças Crônicas:</label>
+                        <textarea id="condicoes" oninput="saveField('condicoes', this.value)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Marca da Ração / Tipo de Alimentação:</label>
+                        <textarea id="alimentacao" oninput="saveField('alimentacao', this.value)"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. REGISTRO DE VACINAS, VERMÍFUGOS & ANTIPULGAS -->
+            <div class="section-card">
+                <div class="section-title">3. Registro de Vacinas, Vermífugos & Antipulgas</div>
+                <div style="padding: 15px; overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tipo / Vacina</th>
+                                <th>Data Aplicação</th>
+                                <th>Próxima Dose</th>
+                                <th>Marca / Lote</th>
+                                <th>Responsável / Vet</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vaxTableBody"></tbody>
+                    </table>
+                    <button class="btn btn-secondary" onclick="addVaxRow()" style="margin-top: 10px;">+ Adicionar Linha</button>
+                </div>
+            </div>
+
+            <!-- 4. DIÁRIO DE HÁBITOS & ADESTRAMENTO -->
+            <div class="section-card">
+                <div class="section-title">4. Diário de Hábitos & Adestramento</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Comandos em Treino:</label>
+                        <textarea id="comandos" oninput="saveField('comandos', this.value)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Horários de Passeio:</label>
+                        <textarea id="horariosPasseio" oninput="saveField('horariosPasseio', this.value)"></textarea>
+                    </div>
+                </div>
+                <div style="padding: 0 15px 10px 15px; font-weight: bold; font-size: 0.85rem; color: var(--primary-dark);">Checklist Diário de Cuidados:</div>
+                <div class="checklist-grid">
+                    <label class="checkbox-item"><input type="checkbox" id="chk1" onchange="saveCheck('chk1', this.checked)"> Água Fresca</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chk2" onchange="saveCheck('chk2', this.checked)"> Refeição Manhã</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chk3" onchange="saveCheck('chk3', this.checked)"> Refeição Noite</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chk4" onchange="saveCheck('chk4', this.checked)"> Passeio Principal</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chk5" onchange="saveCheck('chk5', this.checked)"> Escovação Pelos</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chk6" onchange="saveCheck('chk6', this.checked)"> Higiene Bucal</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chk7" onchange="saveCheck('chk7', this.checked)"> Treino / Enriquecimento</label>
+                    <label class="checkbox-item"><input type="checkbox" id="chk8" onchange="saveCheck('chk8', this.checked)"> Remédio / Suplemento</label>
+                </div>
+            </div>
+
+            <!-- 5. CONTROLE FINANCEIRO PET -->
+            <div class="section-card">
+                <div class="section-title">5. Controle Financeiro Pet</div>
+                <div style="padding: 15px; overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item / Serviço</th>
+                                <th>Categoria</th>
+                                <th>Valor (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finTableBody"></tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="2" style="text-align: right;">Total Gasto:</th>
+                                <th id="finTotal">R$ 0,00</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <button class="btn btn-secondary" onclick="addFinRow()" style="margin-top: 10px;">+ Adicionar Despesa</button>
+                </div>
+            </div>
+
+            <!-- 6. FICHA DE CUIDADOS PARA PET SITTER / CUIDADORES -->
+            <div class="section-card">
+                <div class="section-title">6. Ficha de Cuidados para Pet Sitter / Cuidadora</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Quantidade de Ração & Horários:</label>
+                        <textarea id="sitterRacao" oninput="saveField('sitterRacao', this.value)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Recomendações nos Passeios:</label>
+                        <textarea id="sitterPasseios" oninput="saveField('sitterPasseios', this.value)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Manias e Comportamentos (Medos/Gostos):</label>
+                        <textarea id="sitterManias" oninput="saveField('sitterManias', this.value)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>O que NÃO pode fazer de jeito nenhum:</label>
+                        <textarea id="sitterProibido" oninput="saveField('sitterProibido', this.value)"></textarea>
+                    </div>
+                </div>
+                <div style="padding: 0 15px 15px 15px;">
+                    <div class="form-group">
+                        <label>Observações Adicionais:</label>
+                        <textarea id="sitterObs" oninput="saveField('sitterObs', this.value)"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div>Desenvolvido com excelência por <a href="https://carlamiter038-source.github.io/carlamitertech/" target="_blank">Carlamitertech</a></div>
+            <div>
+                <a onclick="openModal('termsModal')">Termos de Uso</a> | 
+                <a onclick="openModal('privacyModal')">Política de Privacidade</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- TOAST DE SALVAMENTO -->
+    <div id="toast" class="toast">Alterações salvas automaticamente!</div>
+
+    <!-- MODAL TERMOS DE USO -->
+    <div id="termsModal" class="modal-overlay">
+        <div class="modal">
+            <h2>Termos de Uso</h2>
+            <p><strong>1. Aceitação dos Termos:</strong> Ao utilizar este aplicativo Web PWA "Planner de Cuidados com Pet", você concorda integralmente com estes termos.</p>
+            <p><strong>2. Finalidade Organizacional:</strong> Este software tem caráter exclusivamente de organização pessoal e acompanhamento de rotina para tutores e cuidadores de animais.</p>
+            <p><strong>3. Ausência de Aconselhamento Médico:</strong> As informações registradas neste aplicativo não substituem diagnósticos, prescrições ou orientações médicas veterinárias profissionais.</p>
+            <p><strong>4. Armazenamento Local:</strong> Todos os dados inseridos são guardados exclusivamente no navegador/dispositivo do usuário através do armazenamento LocalStorage.</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeModal('termsModal')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POLÍTICA DE PRIVACIDADE -->
+    <div id="privacyModal" class="modal-overlay">
+        <div class="modal">
+            <h2>Política de Privacidade</h2>
+            <p><strong>1. Privacidade Total:</strong> A <strong>Carlamitertech</strong> respeita sua privacidade. Este aplicativo funciona de forma 100% local (Client-Side).</p>
+            <p><strong>2. Coleta de Dados:</strong> NENHUM dado pessoal, de pets, registros de saúde ou informações financeiras é enviado para servidores externos ou compartilhado com terceiros.</p>
+            <p><strong>3. Segurança e Backup:</strong> Como os dados permanecem salvos no seu próprio navegador, a limpeza do cache do navegador pode apagar as informações. Recomendamos a utilização periódica do botão "💾 Backup" para gerar um ficheiro de segurança.</p>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="closeModal('privacyModal')">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DA APLICAÇÃO & MANIFEST PWA -->
+    <script>
+        // GERADOR DE MANIFEST PWA EM DATA URI
+        const manifest = {
+            name: "Planner de Cuidados com Pet - Carlamitertech",
+            short_name: "Planner Pet",
+            start_url: "./",
+            display: "standalone",
+            background_color: "#e9eff0",
+            theme_color: "#1b4d4f",
+            icons: [{
+                src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231b4d4f'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-size='50'>🐾</text></svg>",
+                sizes: "192x192 512x512",
+                type: "image/svg+xml"
+            }]
+        };
+        document.getElementById('pwa-manifest').href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+
+        // REGISTRO DE SERVICE WORKER OFFLINE
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'pet-planner-v1';
+                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./']))));
+                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+        }
+
+        // LÓGICA DO BANCO DE DADOS LOCAL
+        let db = JSON.parse(localStorage.getItem('pet_planner_db')) || {
+            currentPetId: 'pet_default',
+            pets: {
+                'pet_default': {
+                    name: 'Meu Pet',
+                    fields: {},
+                    checks: {},
+                    vaxRows: [
+                        { type: 'Vacina V10', data: '', prox: '', lote: '', vet: '' },
+                        { type: 'Antirrábica', data: '', prox: '', lote: '', vet: '' },
+                        { type: 'Vermífugo', data: '', prox: '', lote: '', vet: '' }
+                    ],
+                    finRows: [
+                        { item: 'Ração / Petiscos', cat: 'Alimentação', val: '' },
+                        { item: 'Banho & Tosa', cat: 'Higiene', val: '' },
+                        { item: 'Veterinário / Exames', cat: 'Saúde', val: '' }
+                    ]
+                }
+            }
+        };
+
+        function saveDB() {
+            localStorage.setItem('pet_planner_db', JSON.stringify(db));
+            showToast();
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => toast.classList.remove('show'), 1500);
+        }
+
+        function getCurrentPet() {
+            if(!db.pets[db.currentPetId]) {
+                db.currentPetId = Object.keys(db.pets)[0] || 'pet_default';
+            }
+            return db.pets[db.currentPetId];
+        }
+
+        function renderPetSelect() {
+            const select = document.getElementById('petSelect');
+            select.innerHTML = '';
+            for(let id in db.pets) {
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = db.pets[id].name || 'Sem Nome';
+                if(id === db.currentPetId) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        function switchPet(id) {
+            db.currentPetId = id;
+            saveDB();
+            loadPetData();
+        }
+
+        function promptNewPet() {
+            const name = prompt('Digite o nome do novo Pet:');
+            if(name) {
+                const newId = 'pet_' + Date.now();
+                db.pets[newId] = {
+                    name: name,
+                    fields: { nomePet: name },
+                    checks: {},
+                    vaxRows: [{ type: '', data: '', prox: '', lote: '', vet: '' }],
+                    finRows: [{ item: '', cat: '', val: '' }]
+                };
+                db.currentPetId = newId;
+                saveDB();
+                renderPetSelect();
+                loadPetData();
+            }
+        }
+
+        function deleteCurrentPet() {
+            const keys = Object.keys(db.pets);
+            if(keys.length <= 1) {
+                alert('Você deve manter pelo menos um Pet cadastrado.');
+                return;
+            }
+            if(confirm(`Tem certeza que deseja apagar o perfil de "${getCurrentPet().name}"?`)) {
+                delete db.pets[db.currentPetId];
+                db.currentPetId = Object.keys(db.pets)[0];
+                saveDB();
+                renderPetSelect();
+                loadPetData();
+            }
+        }
+
+        function saveField(fieldId, val) {
+            const pet = getCurrentPet();
+            pet.fields[fieldId] = val;
+            if(fieldId === 'nomePet') {
+                pet.name = val || 'Sem Nome';
+                renderPetSelect();
+            }
+            saveDB();
+        }
+
+        function saveCheck(checkId, val) {
+            const pet = getCurrentPet();
+            pet.checks[checkId] = val;
+            saveDB();
+        }
+
+        function loadPetData() {
+            const pet = getCurrentPet();
+            
+            // Carrega Inputs
+            const fields = ['nomePet', 'nomeTutor', 'especieRaca', 'telefone', 'nascimento', 'email', 'pelagem', 'clinica', 'microchip', 'vetResponsavel', 'alergias', 'medicamentos', 'condicoes', 'alimentacao', 'comandos', 'horariosPasseio', 'sitterRacao', 'sitterPasseios', 'sitterManias', 'sitterProibido', 'sitterObs'];
+            fields.forEach(f => {
+                const el = document.getElementById(f);
+                if(el) el.value = pet.fields[f] || '';
+            });
+
+            // Carrega Checkboxes
+            for(let i=1; i<=8; i++) {
+                const chk = document.getElementById('chk' + i);
+                if(chk) chk.checked = !!pet.checks['chk' + i];
+            }
+
+            // Carrega Tabelas
+            renderVaxTable();
+            renderFinTable();
+        }
+
+        // TABELA DE VACINAS
+        function renderVaxTable() {
+            const pet = getCurrentPet();
+            const tbody = document.getElementById('vaxTableBody');
+            tbody.innerHTML = '';
+            (pet.vaxRows || []).forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${row.type || ''}" oninput="updateVaxRow(${idx}, 'type', this.value)"></td>
+                    <td><input type="date" value="${row.data || ''}" oninput="updateVaxRow(${idx}, 'data', this.value)"></td>
+                    <td><input type="date" value="${row.prox || ''}" oninput="updateVaxRow(${idx}, 'prox', this.value)"></td>
+                    <td><input type="text" value="${row.lote || ''}" oninput="updateVaxRow(${idx}, 'lote', this.value)"></td>
+                    <td><input type="text" value="${row.vet || ''}" oninput="updateVaxRow(${idx}, 'vet', this.value)"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function addVaxRow() {
+            const pet = getCurrentPet();
+            pet.vaxRows.push({ type: '', data: '', prox: '', lote: '', vet: '' });
+            saveDB();
+            renderVaxTable();
+        }
+
+        function updateVaxRow(idx, field, val) {
+            const pet = getCurrentPet();
+            pet.vaxRows[idx][field] = val;
+            saveDB();
+        }
+
+        // TABELA FINANCEIRA
+        function renderFinTable() {
+            const pet = getCurrentPet();
+            const tbody = document.getElementById('finTableBody');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            (pet.finRows || []).forEach((row, idx) => {
+                const valNum = parseFloat(row.val) || 0;
+                total += valNum;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${row.item || ''}" oninput="updateFinRow(${idx}, 'item', this.value)"></td>
+                    <td><input type="text" value="${row.cat || ''}" oninput="updateFinRow(${idx}, 'cat', this.value)"></td>
+                    <td><input type="number" step="0.01" value="${row.val || ''}" oninput="updateFinRow(${idx}, 'val', this.value)"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('finTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+        }
+
+        function addFinRow() {
+            const pet = getCurrentPet();
+            pet.finRows.push({ item: '', cat: '', val: '' });
+            saveDB();
+            renderFinTable();
+        }
+
+        function updateFinRow(idx, field, val) {
+            const pet = getCurrentPet();
+            pet.finRows[idx][field] = val;
+            saveDB();
+            if(field === 'val') {
+                let total = pet.finRows.reduce((acc, r) => acc + (parseFloat(r.val) || 0), 0);
+                document.getElementById('finTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+            }
+        }
+
+        // BACKUP & RESTAURAÇÃO
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `backup_planner_pet_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        if(imported.pets) {
+                            db = imported;
+                            saveDB();
+                            renderPetSelect();
+                            loadPetData();
+                            alert('Dados restaurados com sucesso!');
+                        }
+                    } catch(err) {
+                        alert('Ficheiro de backup inválido.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // MODAIS
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // INICIALIZAÇÃO DA APLICAÇÃO
+        renderPetSelect();
+        loadPetData();
+    </script>
+</body>
+</html>
