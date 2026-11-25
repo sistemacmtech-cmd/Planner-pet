@@ -7,6 +7,10 @@
     <meta name="theme-color" content="#1b4d4f">
     <meta name="description" content="Planner digital PWA para gestão de cuidados, saúde, hábitos e finanças de pets por Carlamitertech.">
     <link rel="manifest" id="pwa-manifest">
+    
+    <!-- Biblioteca externa para geração nativa de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         :root {
             --primary: #1b4d4f;
@@ -119,6 +123,7 @@
         .btn-secondary:hover { background: #d0d0d0; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #c0392b; }
+        .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
 
         .content {
             padding: 20px;
@@ -337,32 +342,24 @@
         .modal h2 { margin-bottom: 10px; color: var(--primary); }
         .modal p { font-size: 0.9rem; line-height: 1.4; margin-bottom: 10px; }
         .modal-actions { text-align: right; margin-top: 15px; }
-
-        @media print {
-            body { background: white; padding: 0; }
-            .pet-bar, .actions-bar, .pet-photo-controls, footer, .btn { display: none !important; }
-            .app-container { box-shadow: none; border: none; }
-            .section-card { break-inside: avoid; }
-            .pet-photo-box { border-style: solid; border-color: var(--primary); }
-        }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container" id="plannerContent">
         <header>
             <h1>Planner de Cuidados com Pet</h1>
             <p>Ficha de Identificação, Saúde & Rotina Diária</p>
         </header>
 
-        <div class="pet-bar">
+        <div class="pet-bar" data-html2pdf-ignore="true">
             <div class="pet-selector-group">
                 <label style="color:white; font-size: 0.85rem;" for="petSelect">Selecionar Pet:</label>
                 <select id="petSelect" onchange="switchPet(this.value)"></select>
                 <button class="btn btn-primary" onclick="promptNewPet()">+ Novo Pet</button>
             </div>
             <div class="actions-bar">
-                <button class="btn btn-secondary" onclick="window.print()">📄 PDF</button>
+                <button class="btn btn-secondary" onclick="exportPDF()">📄 Baixar PDF Completo</button>
                 <button class="btn btn-danger" onclick="deleteCurrentPet()">🗑️ Apagar Pet</button>
             </div>
         </div>
@@ -377,7 +374,7 @@
                         <img id="petPhotoPreview" alt="Foto do Pet">
                         <span id="petPhotoPlaceholder" class="pet-photo-placeholder">🐾 Sem foto</span>
                     </div>
-                    <div class="pet-photo-controls">
+                    <div class="pet-photo-controls" data-html2pdf-ignore="true">
                         <label style="font-size: 0.85rem; font-weight: 600; color: var(--primary-dark);">Foto do Pet:</label>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <button type="button" class="btn btn-primary" onclick="document.getElementById('petPhotoInput').click()">📷 Escolher Foto</button>
@@ -467,11 +464,12 @@
                                 <th>Próxima Dose</th>
                                 <th>Marca / Lote</th>
                                 <th>Responsável / Vet</th>
+                                <th data-html2pdf-ignore="true" style="width: 50px; text-align: center;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="vaxTableBody"></tbody>
                     </table>
-                    <button class="btn btn-secondary" onclick="addVaxRow()" style="margin-top: 10px;">+ Adicionar Linha</button>
+                    <button class="btn btn-secondary" onclick="addVaxRow()" style="margin-top: 10px;" data-html2pdf-ignore="true">+ Adicionar Linha</button>
                 </div>
             </div>
 
@@ -488,7 +486,10 @@
                         <textarea id="horariosPasseio" oninput="saveField('horariosPasseio', this.value)"></textarea>
                     </div>
                 </div>
-                <div style="padding: 0 15px 10px 15px; font-weight: bold; font-size: 0.85rem; color: var(--primary-dark);">Checklist Diário de Cuidados:</div>
+                <div style="padding: 0 15px 10px 15px; font-weight: bold; font-size: 0.85rem; color: var(--primary-dark); display: flex; justify-content: space-between; align-items: center;">
+                    <span>Checklist Diário de Cuidados:</span>
+                    <button class="btn btn-secondary btn-sm" onclick="clearAllChecks()" data-html2pdf-ignore="true">Desmarcar Todos</button>
+                </div>
                 <div class="checklist-grid">
                     <label class="checkbox-item"><input type="checkbox" id="chk1" onchange="saveCheck('chk1', this.checked)"> Água Fresca</label>
                     <label class="checkbox-item"><input type="checkbox" id="chk2" onchange="saveCheck('chk2', this.checked)"> Refeição Manhã</label>
@@ -511,17 +512,18 @@
                                 <th>Item / Serviço</th>
                                 <th>Categoria</th>
                                 <th>Valor (R$)</th>
+                                <th data-html2pdf-ignore="true" style="width: 50px; text-align: center;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="finTableBody"></tbody>
                         <tfoot>
                             <tr>
                                 <th colspan="2" style="text-align: right;">Total Gasto:</th>
-                                <th id="finTotal">R$ 0,00</th>
+                                <th id="finTotal" colspan="2">R$ 0,00</th>
                             </tr>
                         </tfoot>
                     </table>
-                    <button class="btn btn-secondary" onclick="addFinRow()" style="margin-top: 10px;">+ Adicionar Despesa</button>
+                    <button class="btn btn-secondary" onclick="addFinRow()" style="margin-top: 10px;" data-html2pdf-ignore="true">+ Adicionar Despesa</button>
                 </div>
             </div>
 
@@ -557,7 +559,7 @@
 
         <footer>
             <div>Desenvolvido com excelência por <a href="https://carlamiter038-source.github.io/carlamitertech/" target="_blank">Carlamitertech</a></div>
-            <div>
+            <div data-html2pdf-ignore="true">
                 <a onclick="openModal('termsModal')">Termos de Uso</a> | 
                 <a onclick="openModal('privacyModal')">Política de Privacidade</a>
             </div>
@@ -773,6 +775,16 @@
             saveDB();
         }
 
+        function clearAllChecks() {
+            const pet = getCurrentPet();
+            for(let i=1; i<=8; i++) {
+                pet.checks['chk' + i] = false;
+                const chk = document.getElementById('chk' + i);
+                if(chk) chk.checked = false;
+            }
+            saveDB();
+        }
+
         function loadPetData() {
             const pet = getCurrentPet();
 
@@ -810,6 +822,7 @@
                     <td><input type="date" value="${row.prox || ''}" oninput="updateVaxRow(${idx}, 'prox', this.value)"></td>
                     <td><input type="text" value="${row.lote || ''}" oninput="updateVaxRow(${idx}, 'lote', this.value)"></td>
                     <td><input type="text" value="${row.vet || ''}" oninput="updateVaxRow(${idx}, 'vet', this.value)"></td>
+                    <td data-html2pdf-ignore="true" style="text-align: center;"><button class="btn btn-danger btn-sm" onclick="deleteVaxRow(${idx})">🗑️</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -828,6 +841,13 @@
             saveDB();
         }
 
+        function deleteVaxRow(idx) {
+            const pet = getCurrentPet();
+            pet.vaxRows.splice(idx, 1);
+            saveDB();
+            renderVaxTable();
+        }
+
         // TABELA FINANCEIRA
         function renderFinTable() {
             const pet = getCurrentPet();
@@ -843,6 +863,7 @@
                     <td><input type="text" value="${row.item || ''}" oninput="updateFinRow(${idx}, 'item', this.value)"></td>
                     <td><input type="text" value="${row.cat || ''}" oninput="updateFinRow(${idx}, 'cat', this.value)"></td>
                     <td><input type="number" step="0.01" value="${row.val || ''}" oninput="updateFinRow(${idx}, 'val', this.value)"></td>
+                    <td data-html2pdf-ignore="true" style="text-align: center;"><button class="btn btn-danger btn-sm" onclick="deleteFinRow(${idx})">🗑️</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -865,6 +886,29 @@
                 let total = pet.finRows.reduce((acc, r) => acc + (parseFloat(r.val) || 0), 0);
                 document.getElementById('finTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
             }
+        }
+
+        function deleteFinRow(idx) {
+            const pet = getCurrentPet();
+            pet.finRows.splice(idx, 1);
+            saveDB();
+            renderFinTable();
+        }
+
+        // GERAÇÃO DIRETA DE PDF (USANDO HTML2PDF)
+        function exportPDF() {
+            const element = document.getElementById('plannerContent');
+            const petName = getCurrentPet().name || 'Pet';
+            
+            const opt = {
+                margin:       [10, 10, 10, 10],
+                filename:     `Planner_${petName.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
         }
 
         // MODAIS
