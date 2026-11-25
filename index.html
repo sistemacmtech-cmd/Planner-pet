@@ -80,6 +80,14 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .actions-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .pet-bar select {
@@ -108,7 +116,9 @@
         .btn-primary { background: var(--accent); color: white; }
         .btn-primary:hover { background: #236365; }
         .btn-secondary { background: #e0e0e0; color: #333; }
+        .btn-secondary:hover { background: #d0d0d0; }
         .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #c0392b; }
 
         .content {
             padding: 20px;
@@ -132,6 +142,58 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        .pet-profile-top {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 15px 0 15px;
+            flex-wrap: wrap;
+        }
+
+        .pet-photo-box {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            border: 2px dashed var(--accent);
+            background: var(--bg-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .pet-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .pet-photo-box img.has-photo {
+            display: block;
+        }
+
+        .pet-photo-placeholder {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--primary);
+            padding: 8px;
+            font-weight: 600;
+        }
+
+        .pet-photo-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pet-photo-controls p {
+            font-size: 0.8rem;
+            color: #666;
         }
 
         .grid-2 {
@@ -278,9 +340,10 @@
 
         @media print {
             body { background: white; padding: 0; }
-            .pet-bar, .actions-bar, footer, .btn { display: none !important; }
+            .pet-bar, .actions-bar, .pet-photo-controls, footer, .btn { display: none !important; }
             .app-container { box-shadow: none; border: none; }
             .section-card { break-inside: avoid; }
+            .pet-photo-box { border-style: solid; border-color: var(--primary); }
         }
     </style>
 </head>
@@ -299,9 +362,7 @@
                 <button class="btn btn-primary" onclick="promptNewPet()">+ Novo Pet</button>
             </div>
             <div class="actions-bar">
-                <button class="btn btn-secondary" onclick="exportData()">💾 Backup</button>
-                <button class="btn btn-secondary" onclick="importData()">📂 Restaurar</button>
-                <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir</button>
+                <button class="btn btn-secondary" onclick="window.print()">📄 PDF</button>
                 <button class="btn btn-danger" onclick="deleteCurrentPet()">🗑️ Apagar Pet</button>
             </div>
         </div>
@@ -310,6 +371,23 @@
             <!-- 1. DADOS DO PET & TUTOR -->
             <div class="section-card">
                 <div class="section-title">1. Dados do Pet & Tutor</div>
+
+                <div class="pet-profile-top">
+                    <div class="pet-photo-box">
+                        <img id="petPhotoPreview" alt="Foto do Pet">
+                        <span id="petPhotoPlaceholder" class="pet-photo-placeholder">🐾 Sem foto</span>
+                    </div>
+                    <div class="pet-photo-controls">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--primary-dark);">Foto do Pet:</label>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('petPhotoInput').click()">📷 Escolher Foto</button>
+                            <button type="button" class="btn btn-secondary" onclick="removePetPhoto()">Remover Foto</button>
+                        </div>
+                        <input type="file" id="petPhotoInput" accept="image/*" style="display: none;" onchange="handlePetPhotoUpload(event)">
+                        <p>A imagem fica salva automaticamente neste dispositivo.</p>
+                    </div>
+                </div>
+
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Nome do Pet:</label>
@@ -508,8 +586,8 @@
         <div class="modal">
             <h2>Política de Privacidade</h2>
             <p><strong>1. Privacidade Total:</strong> A <strong>Carlamitertech</strong> respeita sua privacidade. Este aplicativo funciona de forma 100% local (Client-Side).</p>
-            <p><strong>2. Coleta de Dados:</strong> NENHUM dado pessoal, de pets, registros de saúde ou informações financeiras é enviado para servidores externos ou compartilhado com terceiros.</p>
-            <p><strong>3. Segurança e Backup:</strong> Como os dados permanecem salvos no seu próprio navegador, a limpeza do cache do navegador pode apagar as informações. Recomendamos a utilização periódica do botão "💾 Backup" para gerar um ficheiro de segurança.</p>
+            <p><strong>2. Coleta de Dados:</strong> NENHUM dado pessoal, foto, registro de saúde ou informação financeira é enviado para servidores externos ou compartilhado com terceiros.</p>
+            <p><strong>3. Armazenamento no Dispositivo:</strong> Os dados permanecem salvos no seu próprio navegador. A limpeza dos dados do site/navegador pode apagar as informações armazenadas localmente.</p>
             <div class="modal-actions">
                 <button class="btn btn-primary" onclick="closeModal('privacyModal')">Fechar</button>
             </div>
@@ -551,6 +629,7 @@
             pets: {
                 'pet_default': {
                     name: 'Meu Pet',
+                    photo: '',
                     fields: {},
                     checks: {},
                     vaxRows: [
@@ -568,8 +647,12 @@
         };
 
         function saveDB() {
-            localStorage.setItem('pet_planner_db', JSON.stringify(db));
-            showToast();
+            try {
+                localStorage.setItem('pet_planner_db', JSON.stringify(db));
+                showToast();
+            } catch (err) {
+                alert('A imagem escolhida é muito grande para o armazenamento local do navegador. Tente uma foto menor.');
+            }
         }
 
         function showToast() {
@@ -584,6 +667,42 @@
                 db.currentPetId = Object.keys(db.pets)[0] || 'pet_default';
             }
             return db.pets[db.currentPetId];
+        }
+
+        function renderPetPhoto(photoData) {
+            const img = document.getElementById('petPhotoPreview');
+            const placeholder = document.getElementById('petPhotoPlaceholder');
+            if (photoData) {
+                img.src = photoData;
+                img.classList.add('has-photo');
+                placeholder.style.display = 'none';
+            } else {
+                img.src = '';
+                img.classList.remove('has-photo');
+                placeholder.style.display = 'block';
+            }
+        }
+
+        function handlePetPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const pet = getCurrentPet();
+                pet.photo = e.target.result;
+                renderPetPhoto(pet.photo);
+                saveDB();
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function removePetPhoto() {
+            const pet = getCurrentPet();
+            pet.photo = '';
+            renderPetPhoto('');
+            saveDB();
         }
 
         function renderPetSelect() {
@@ -610,6 +729,7 @@
                 const newId = 'pet_' + Date.now();
                 db.pets[newId] = {
                     name: name,
+                    photo: '',
                     fields: { nomePet: name },
                     checks: {},
                     vaxRows: [{ type: '', data: '', prox: '', lote: '', vet: '' }],
@@ -655,6 +775,9 @@
 
         function loadPetData() {
             const pet = getCurrentPet();
+
+            // Carrega foto
+            renderPetPhoto(pet.photo || '');
             
             // Carrega Inputs
             const fields = ['nomePet', 'nomeTutor', 'especieRaca', 'telefone', 'nascimento', 'email', 'pelagem', 'clinica', 'microchip', 'vetResponsavel', 'alergias', 'medicamentos', 'condicoes', 'alimentacao', 'comandos', 'horariosPasseio', 'sitterRacao', 'sitterPasseios', 'sitterManias', 'sitterProibido', 'sitterObs'];
@@ -744,43 +867,6 @@
             }
         }
 
-        // BACKUP & RESTAURAÇÃO
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `backup_planner_pet_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importData() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'application/json';
-            input.onchange = e => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                reader.onload = event => {
-                    try {
-                        const imported = JSON.parse(event.target.result);
-                        if(imported.pets) {
-                            db = imported;
-                            saveDB();
-                            renderPetSelect();
-                            loadPetData();
-                            alert('Dados restaurados com sucesso!');
-                        }
-                    } catch(err) {
-                        alert('Ficheiro de backup inválido.');
-                    }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        }
-
         // MODAIS
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -791,3 +877,4 @@
     </script>
 </body>
 </html>
+
